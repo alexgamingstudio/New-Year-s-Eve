@@ -24,8 +24,6 @@ Ein interaktives High-End Event-Dashboard im offiziellen Twitch-Design für den 
 
 ## 📡 OBS Integration
 Für Streamer:
-* **Quelle:** Browser-Quelle hinzufügen.
-* **URL:** Pfad zur lokalen Datei oder GitHub Pages URL.
 * **FPS:** 60 FPS empfohlen für flüssige Partikel-Animationen.
 
 ---
