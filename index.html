@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Twitch Official | Silvester 2026</title>
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239146FF'%3E%3Cpath d='M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z'/%3E%3C/svg%3E">
+
+    <style>
+        :root {
+            --twitch-purple: #9146FF;
+            --twitch-dark: #18181b;
+            --gold-main: #ffd700;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: #0e0e10;
+            font-family: 'Roobert', 'Inter', 'Segoe UI', sans-serif;
+            color: white;
+            touch-action: manipulation;
+        }
+
+        canvas { position: absolute; top: 0; left: 0; z-index: 1; cursor: crosshair; }
+
+        /* --- Twitch Header --- */
+        .twitch-banner {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: var(--twitch-dark);
+            padding: 10px 0; z-index: 100;
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+            border-bottom: 2px solid var(--twitch-purple);
+        }
+
+        .twitch-logo-svg { width: 25px; height: 25px; filter: drop-shadow(0 0 3px var(--twitch-purple)); }
+
+        .brand-name {
+            font-family: 'Arial Black', sans-serif;
+            font-size: 1.2rem; font-style: italic; letter-spacing: -0.5px;
+            text-shadow: 1px 1px 0px #5a2e99;
+        }
+
+        /* --- LIVE Badge --- */
+        .live-badge {
+            position: fixed; top: 60px; right: 15px;
+            background: #eb0400; color: white;
+            padding: 3px 8px; border-radius: 4px;
+            font-weight: bold; font-size: 0.7rem;
+            z-index: 101; animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; }
+        }
+
+        /* --- UI Layer --- */
+        .ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            perspective: 1500px; pointer-events: none;
+            padding: 20px; box-sizing: border-box;
+        }
+
+        .year-wrapper {
+            transform-style: preserve-3d;
+            margin-bottom: 25px;
+            transition: transform 1.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .gold-3d {
+            font-size: clamp(4rem, 18vw, 10rem); font-weight: 900;
+            background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.3));
+            text-shadow: 0 5px 15px rgba(0,0,0,0.6);
+        }
+
+        .spin-action { animation: horizontalFlip 1.8s forwards; }
+
+        @keyframes horizontalFlip {
+            0% { transform: rotateY(0deg) scale(1); }
+            50% { transform: rotateY(180deg) scale(1.1); }
+            100% { transform: rotateY(360deg) scale(1); }
+        }
+
+        /* --- Countdown --- */
+        #countdown { 
+            display: flex; flex-wrap: wrap; justify-content: center; 
+            gap: 12px; pointer-events: auto; width: 100%; max-width: 550px;
+        }
+        .box {
+            background: rgba(24, 24, 27, 0.9);
+            border: 1px solid var(--twitch-purple);
+            padding: 12px; border-radius: 8px; 
+            flex: 1 1 75px;
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .num { font-size: clamp(1.6rem, 5.5vw, 2.8rem); font-weight: bold; display: block; }
+        .lab { font-size: 0.75rem; color: var(--twitch-purple); text-transform: uppercase; letter-spacing: 1px; }
+
+        #greeting {
+            font-size: clamp(1.3rem, 4.5vw, 2.8rem); font-weight: 900; text-align: center;
+            color: white; opacity: 0; margin-top: 30px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.9), 0 0 20px var(--twitch-purple);
+            transition: 1.5s ease-out;
+            line-height: 1.2;
+        }
+
+        .shake { animation: shakeBody 0.5s; }
+        @keyframes shakeBody {
+            0%, 100% { transform: translate(0,0); }
+            25% { transform: translate(-6px, 6px); }
+            50% { transform: translate(6px, -6px); }
+            75% { transform: translate(-6px, -6px); }
+        }
+
+        .hidden { display: none !important; opacity: 0; visibility: hidden; }
+
+        @media (max-width: 480px) {
+            .brand-name { font-size: 0.9rem; }
+            .box { padding: 10px; flex: 1 1 65px; }
+        }
+    </style>
+</head>
+<body id="mainBody">
+
+    <div class="live-badge">● LIVE</div>
+
+    <div class="twitch-banner">
+        <svg class="twitch-logo-svg" viewBox="0 0 24 24" fill="white">
+            <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/>
+        </svg>
+        <span class="brand-name">TWITCH PRÄSENTIERT</span>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="ui-layer">
+        <div class="year-wrapper" id="yearBox">
+            <span class="gold-3d" id="yearDisplay">2025</span>
+        </div>
+
+        <div id="countdown">
+            <div class="box"><span class="num" id="d">00</span><span class="lab">Tage</span></div>
+            <div class="box"><span class="num" id="h">00</span><span class="lab">Std</span></div>
+            <div class="box"><span class="num" id="m">00</span><span class="lab">Min</span></div>
+            <div class="box"><span class="num" id="s">00</span><span class="lab">Sek</span></div>
+        </div>
+
+        <div id="greeting">Twitch wünscht ein<br>schönes neues Jahr!</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const mainBody = document.getElementById('mainBody');
+        let particles = [];
+        let isNewYear = false;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        const handleInteraction = (e) => {
+            const x = e.clientX || (e.touches && e.touches[0].clientX);
+            const y = e.clientY || (e.touches && e.touches[0].clientY);
+            if(x && y) createExplosion(x, y);
+        };
+        window.addEventListener('mousedown', handleInteraction);
+        window.addEventListener('touchstart', handleInteraction);
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * (window.innerWidth < 600 ? 5 : 8) + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 1; this.color = color;
+                this.gravity = 0.12;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.vy += this.gravity; this.alpha -= 0.015;
+            }
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath(); 
+                ctx.arc(this.x, this.y, window.innerWidth < 600 ? 2 : 3, 0, Math.PI*2); 
+                ctx.fill();
+            }
+        }
+
+        function createExplosion(x, y) {
+            const colors = ['#9146FF', '#ffd700', '#ffffff', '#00ffcc'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const count = window.innerWidth < 600 ? 40 : 80;
+            for(let i=0; i<count; i++) particles.push(new Particle(x, y, color));
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(14, 14, 16, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            for(let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if(particles[i].alpha <= 0) particles.splice(i, 1);
+            }
+
+            if(isNewYear && Math.random() < 0.1) {
+                createExplosion(Math.random() * canvas.width, Math.random() * canvas.height * 0.5);
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        function updateTimer() {
+            const now = new Date();
+            const target = new Date(2026, 0, 1, 0, 0, 0);
+            const diff = target - now;
+
+            if (diff <= 0 && !isNewYear) {
+                triggerNewYear();
+            } else if (!isNewYear) {
+                const d = Math.max(0, Math.floor(diff / 86400000));
+                const h = Math.max(0, Math.floor((diff / 3600000) % 24));
+                const m = Math.max(0, Math.floor((diff / 60000) % 60));
+                const s = Math.max(0, Math.floor((diff / 1000) % 60));
+                
+                document.getElementById('d').innerText = d.toString().padStart(2, '0');
+                document.getElementById('h').innerText = h.toString().padStart(2, '0');
+                document.getElementById('m').innerText = m.toString().padStart(2, '0');
+                document.getElementById('s').innerText = s.toString().padStart(2, '0');
+            }
+        }
+
+        function triggerNewYear() {
+            if(isNewYear) return;
+            isNewYear = true;
+
+            // UI-Elemente ausblenden
+            const countdownEl = document.getElementById('countdown');
+            countdownEl.style.transition = "opacity 0.5s";
+            countdownEl.style.opacity = "0";
+            setTimeout(() => countdownEl.classList.add('hidden'), 500);
+
+            // Animationen starten
+            document.getElementById('yearBox').classList.add('spin-action');
+            mainBody.classList.add('shake');
+
+            // Initialer Lichtblitz
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0,0,canvas.width, canvas.height);
+
+            setTimeout(() => {
+                const display = document.getElementById('yearDisplay');
+                display.innerText = "2026";
+                display.style.filter = "drop-shadow(0 0 50px #ffd700)";
+                document.getElementById('greeting').style.opacity = "1";
+                mainBody.classList.remove('shake');
+            }, 900);
+        }
+
+        setInterval(updateTimer, 1000);
+        updateTimer();
+    </script>
+</body>
+</html>
